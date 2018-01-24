@@ -144,13 +144,7 @@
                (request-deferred
                 (format org-gcal-events-url (car x))
                 :type "GET"
-                :params `(("access_token" . ,a-token)
-                          ("key" . ,org-gcal-client-secret)
-                          ("singleEvents" . "True")
-			  ("orderBy" . "startTime")
-                          ("timeMin" . ,(org-gcal--subtract-time))
-                          ("timeMax" . ,(org-gcal--add-time))
-                          ("grant_type" . "authorization_code"))
+                :params (org-gcal--get-params a-token)
                 :parser 'org-gcal--json-read
                 :error
                 (cl-function (lambda (&key error-thrown &allow-other-keys)
@@ -467,6 +461,19 @@ It returns the code provided by the service."
         (org-gcal--notify 
          (concat org-gcal-token-file " is not exists" )
          (concat "Make " org-gcal-token-file))))))
+
+(defun org-gcal--get-params (a-token)
+  (let* ((params `(("access_token" . ,a-token)
+                   ("key" . ,org-gcal-client-secret)
+                   ("singleEvents" . "True")
+			             ("orderBy" . "startTime")
+                   ("timeMin" . ,(org-gcal--subtract-time))
+                   ("timeMax" . ,(org-gcal--add-time))
+                   ("grant_type" . "authorization_code")))
+         (params (if org-gcal-timezone
+                     (append `(("timeZone" . ,org-gcal-timezone)) params)
+                   params)))
+    params))
 
 (defun org-gcal--safe-substring (string from &optional to)
   "Calls the `substring' function safely.
